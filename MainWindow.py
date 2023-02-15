@@ -5,7 +5,7 @@ from PyQt5 import QtWidgets, uic
 from DatabaseMySQL import DatabaseMySQL
 from DatabasePostgreSQL import DatabasePostgreSQL
 from DatabaseSQLite import DatabaseSQLite
-from config import MYSQL, POSTGRESQL
+from config import MYSQL, POSTGRESQL, SQLITE
 from Logger import Logger
 
 
@@ -31,7 +31,11 @@ class MainWindow(QtWidgets.QMainWindow):
             table_widget=self.postgresql_table,
             logger=self.logger
         )
-        self.dbSQLite = DatabaseSQLite()
+        self.dbSQLite = DatabaseSQLite(
+            filename=SQLITE["filename"],
+            table_widget=self.sqlite_table,
+            logger=self.logger
+        )
         self.export_to_postgres_button.clicked.connect(
             self.dbPostgreSQL.migrate_from_mysql(self.dbMySql)
         )

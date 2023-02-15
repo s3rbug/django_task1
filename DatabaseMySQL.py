@@ -54,7 +54,6 @@ class DatabaseMySQL:
                 )
             """)
             self.db.commit()
-            # self.logger.log(f"Created table {self.table_name}")
         except connector.Error as error:
             self.logger.error_message_box("MySQL error creating table! " + error.msg, should_abort=True)
 
@@ -84,8 +83,6 @@ class DatabaseMySQL:
         for i, field in enumerate(self.fields):
             for j, value in enumerate(field):
                 table_widget_item = QTableWidgetItem(str(value))
-                if j == self.id_index:
-                    table_widget_item.setFlags(table_widget_item.flags() & ~Qt.ItemIsEditable)
                 table_widget_item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.tableWidget.setItem(i, j, table_widget_item)
             delete_button = QPushButton("Delete item")
@@ -99,7 +96,7 @@ class DatabaseMySQL:
         for i in range(self.table_columns):
             if i == self.id_index:
                 table_widget_item = QTableWidgetItem("")
-                table_widget_item.setFlags(table_widget_item.flags() & ~Qt.ItemIsEditable)
+                # table_widget_item.setFlags(table_widget_item.flags() & ~Qt.ItemIsEditable)
             else:
                 table_widget_item = QTableWidgetItem()
             table_widget_item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
@@ -130,14 +127,14 @@ class DatabaseMySQL:
         return wrap_foo
 
     @staticmethod
-    def str_to_mysql_typo(var):
+    def str_to_mysql_typo(var, _):
         if var == "" or var is None or str(var).lower() == "null":
             return "NULL"
         if is_number(var):
             return str(var)
         return f'"{var}"'
 
-    def mysql_query_values(self, field_values, with_id_field=False):
+    def mysql_query_values(self, field_values, with_id_field=True):
         return sql_query_values(
             field_values=field_values,
             id_index=self.id_index,
@@ -159,9 +156,19 @@ class DatabaseMySQL:
     def create_field(self):
         new_field_widgets = [self.tableWidget.item(self.table_rows, i) for i in range(self.table_columns)]
         new_field_items = [field_widget.text() if field_widget else "" for field_widget in new_field_widgets]
+        with_id_field = False if new_field_items[self.id_index] == "" else True
+        create_field_names = sql_query_field_names(
+            column_names=self.column_names,
+            id_index=self.id_index,
+            with_id_field=with_id_field
+        )
+        create_field_values = self.mysql_query_values(
+            field_values=new_field_items,
+            with_id_field=with_id_field
+        )
         sql_query = f"INSERT {self.table_name}" \
-                    f"({sql_query_field_names(column_names=self.column_names, id_index=self.id_index)}) " \
-                    f"VALUES ({self.mysql_query_values(new_field_items)});"
+                    f"({create_field_names}) " \
+                    f"VALUES ({create_field_values});"
         try:
             self.cursor.execute(sql_query)
             new_field_id = self.cursor.lastrowid
@@ -180,7 +187,7 @@ class DatabaseMySQL:
             return
         field = self.column_names[column]
         field_id = self.fields[row][self.id_index]
-        new_value = self.str_to_mysql_typo(item.text())
+        new_value = self.str_to_mysql_typo(item.text(), None)
         try:
             self.cursor.execute(f"UPDATE {self.table_name} SET {field}={new_value} WHERE id={field_id}")
             self.db.commit()

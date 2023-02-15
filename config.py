@@ -15,8 +15,5 @@ POSTGRESQL = {
 }
 
 SQLITE = {
-    "host": "localhost",
-    "user": "postgres",
-    "password": "root",
-    "database": "django",
+    "filename": "sqlite.db"
 }

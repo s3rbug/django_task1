@@ -48,13 +48,12 @@ class DatabasePostgreSQL:
             self.tableWidget.setVerticalHeaderLabels("" for _ in self.fields)
         except psycopg2.DatabaseError as error:
             self.logger.error_message_box(f"PostgreSQL error connecting table! {error}")
+            self.db.rollback()
 
     def init_table_widget_fields(self):
         for i, field in enumerate(self.fields):
             for j, value in enumerate(field):
                 table_widget_item = QTableWidgetItem(str(value))
-                if j == self.id_index:
-                    table_widget_item.setFlags(table_widget_item.flags() & ~Qt.ItemIsEditable)
                 table_widget_item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                 self.tableWidget.setItem(i, j, table_widget_item)
 
@@ -66,6 +65,7 @@ class DatabasePostgreSQL:
             self.editable = True
         except psycopg2.DatabaseError as error:
             self.logger.error_message_box(f"PostgreSQL error trying to update table! {error}")
+            self.db.rollback()
 
     @staticmethod
     def str_to_postgresql_typo(var, field_type):
@@ -77,7 +77,7 @@ class DatabasePostgreSQL:
             return str(var)
         return f"'{var}'"
 
-    def postgresql_query_values(self, field_values, column_types, with_id_field=False):
+    def postgresql_query_values(self, field_values, column_types, with_id_field=True):
         return sql_query_values(
             field_values=field_values,
             id_index=self.id_index,
@@ -107,10 +107,15 @@ class DatabasePostgreSQL:
                         )
                 """)
                 for field in mysql_db.fields:
+                    query_field_names = mysql_db.sql_query_field_names(with_id_field=True)
+                    query_field_values = self.postgresql_query_values(
+                        field_values=field,
+                        column_types=mysql_db.column_types,
+                    )
                     sql_query = f"""
                         INSERT INTO {self.table_name} 
-                        ({mysql_db.sql_query_field_names(with_id_field=True)}) 
-                        VALUES ({self.postgresql_query_values(field, mysql_db.column_types, with_id_field=True)});
+                        ({query_field_names}) 
+                        VALUES ({query_field_values});
                     """
                     self.cursor.execute(sql_query)
                 self.db.commit()
@@ -118,6 +123,7 @@ class DatabasePostgreSQL:
                 self.logger.log("Successfully exported MySQL table data to PostgreSQL")
             except psycopg2.DatabaseError as error:
                 self.logger.error_message_box(f"Error trying to export to PostgreSQL! {error}", should_abort=True)
+                self.db.rollback()
 
         return wrap_foo
 
@@ -133,13 +139,14 @@ class DatabasePostgreSQL:
             self.db.commit()
             self.logger.log(f"Updated PostgreSQL cell {field} with id {field_id}. New value is {new_value}")
         except psycopg2.DatabaseError as error:
-            self.logger.error_message_box(f"PostgreSQL error trying to delete table item! {error}")
+            self.logger.error_message_box(f"PostgreSQL error trying to update table item! {error}")
+            self.db.rollback()
         self.update_table_widget()
 
     def export_to_sqlite(self, export_fields_lineedit: QLineEdit, db_sqlite):
         def wrap_foo():
             export_fields_text = export_fields_lineedit.text()
-            export_fields = re.split(",?\\s+", export_fields_text)
+            export_fields = re.split(",\\s*|\\s+", export_fields_text)
             for export_field in export_fields:
                 if export_field not in self.column_names:
                     self.logger.error_message_box(f"{export_field} is not a valid field name.\n"
