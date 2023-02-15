@@ -114,8 +114,6 @@ class DatabaseMySQL:
             self.editable = True
         except connector.Error as error:
             self.logger.error_message_box("MySQL error trying to update table! " + error.msg)
-        except ValueError:
-            print("Value error")
 
     def delete_field(self, field_id):
         def wrap_foo():
@@ -125,7 +123,7 @@ class DatabaseMySQL:
                 self.cursor.execute(sql_query)
                 self.db.commit()
                 self.update_table_widget()
-                self.logger.log(f"Deleted field with id={field_id}")
+                self.logger.log(f"Deleted MySQL field with id={field_id}")
             except connector.Error as error:
                 self.logger.error_message_box("MySQL error trying to delete table item! " + error.msg)
 
@@ -169,7 +167,7 @@ class DatabaseMySQL:
             new_field_id = self.cursor.lastrowid
             self.db.commit()
             self.update_table_widget()
-            self.logger.log(f"Created new field with id={new_field_id}")
+            self.logger.log(f"Created MySQL new field with id={new_field_id}")
         except connector.Error as error:
             self.logger.error_message_box("MySQL error trying to add table item! " + error.msg)
 
@@ -186,7 +184,7 @@ class DatabaseMySQL:
         try:
             self.cursor.execute(f"UPDATE {self.table_name} SET {field}={new_value} WHERE id={field_id}")
             self.db.commit()
-            self.logger.log(f"Updated cell {field} with id {field_id}. New value is {new_value}")
+            self.logger.log(f"Updated MySQL cell {field} with id {field_id}. New value is {new_value}")
         except connector.Error as error:
             self.logger.error_message_box("MySQL error trying to delete table item! " + error.msg)
         self.update_table_widget()

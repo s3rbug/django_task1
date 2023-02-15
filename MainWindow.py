@@ -4,8 +4,10 @@ from PyQt5 import QtWidgets, uic
 
 from DatabaseMySQL import DatabaseMySQL
 from DatabasePostgreSQL import DatabasePostgreSQL
+from DatabaseSQLite import DatabaseSQLite
 from config import MYSQL, POSTGRESQL
 from Logger import Logger
+
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -29,7 +31,13 @@ class MainWindow(QtWidgets.QMainWindow):
             table_widget=self.postgresql_table,
             logger=self.logger
         )
-        self.export_to_postgres_button.clicked.connect(self.dbPostgreSQL.export_from_mysql(self.dbMySql))
+        self.dbSQLite = DatabaseSQLite()
+        self.export_to_postgres_button.clicked.connect(
+            self.dbPostgreSQL.migrate_from_mysql(self.dbMySql)
+        )
+        self.export_fields_button.clicked.connect(
+            self.dbPostgreSQL.export_to_sqlite(self.export_fields_lineedit, self.dbSQLite)
+        )
         self.show()
 
 
