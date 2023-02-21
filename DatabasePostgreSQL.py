@@ -35,12 +35,11 @@ class DatabasePostgreSQL:
     def init_table_widget_axis(self):
         try:
             self.cursor.execute(f"SELECT * FROM {self.table_name} LIMIT 0")
-            columns = self.cursor.description
-            self.column_names = [i[0] for i in columns]
+            self.column_names = [i[0] for i in self.cursor.description]
             self.table_columns = len(self.column_names)
             self.tableWidget.setColumnCount(self.table_columns)
             self.tableWidget.setHorizontalHeaderLabels(self.column_names)
-            self.cursor.execute(f"SELECT * FROM {self.table_name}")
+            self.cursor.execute(f"SELECT * FROM {self.table_name} LIMIT 100")
             self.fields = self.cursor.fetchall()
             self.table_rows = len(self.fields)
             self.tableWidget.setRowCount(self.table_rows)
@@ -153,4 +152,5 @@ class DatabasePostgreSQL:
                                                   f"Valid field names are: {self.column_names}")
                     return
             db_sqlite.migrate_from_postgresql(self, export_fields)
+
         return wrap_foo

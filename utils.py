@@ -24,4 +24,3 @@ def sql_query_values(field_values, id_index, column_types, str_to_sql_typo, with
         if not i + 1 == len(field_values):
             sql_query = sql_query + ", "
     return sql_query
-

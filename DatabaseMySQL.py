@@ -68,7 +68,7 @@ class DatabaseMySQL:
             header_labels = self.column_names.copy()
             header_labels.append("")
             self.tableWidget.setHorizontalHeaderLabels(header_labels)
-            self.cursor.execute(f"SELECT * FROM {self.table_name}")
+            self.cursor.execute(f"SELECT * FROM {self.table_name} LIMIT 100")
             self.fields = self.cursor.fetchall()
             self.table_rows = len(self.fields)
             self.tableWidget.setRowCount(self.table_rows + 1)
@@ -96,7 +96,6 @@ class DatabaseMySQL:
         for i in range(self.table_columns):
             if i == self.id_index:
                 table_widget_item = QTableWidgetItem("")
-                # table_widget_item.setFlags(table_widget_item.flags() & ~Qt.ItemIsEditable)
             else:
                 table_widget_item = QTableWidgetItem()
             table_widget_item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)

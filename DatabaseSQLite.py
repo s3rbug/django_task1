@@ -33,14 +33,14 @@ class DatabaseSQLite:
             self.cursor.execute(f"SELECT * FROM {self.table_name} LIMIT 0")
             columns = self.cursor.description
             self.column_names = [i[0] for i in columns]
+            self.id_index = self.column_names.index("id")
+            self.tableWidget.setHorizontalHeaderLabels(self.column_names)
             self.table_columns = len(self.column_names)
             self.tableWidget.setColumnCount(self.table_columns)
-            self.tableWidget.setHorizontalHeaderLabels(self.column_names)
-            self.cursor.execute(f"SELECT * FROM {self.table_name}")
+            self.cursor.execute(f"SELECT * FROM {self.table_name} LIMIT 100")
             self.fields = self.cursor.fetchall()
             self.table_rows = len(self.fields)
             self.tableWidget.setRowCount(self.table_rows)
-            self.id_index = self.column_names.index("id")
             self.tableWidget.setVerticalHeaderLabels("" for _ in self.fields)
         except sqlite3.DatabaseError as error:
             self.logger.error_message_box(f"SQLite error connecting table! {error}")
