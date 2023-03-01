@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QLabel, QMessageBox
 
 
 class Logger:
+    """Клас для логування"""
     def __init__(self, label: QLabel):
         self.label = label
 

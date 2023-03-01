@@ -10,6 +10,7 @@ from utils import is_number
 
 class DatabaseSQLite:
     def __init__(self, filename: str, table_widget: QTableWidget, logger: Logger):
+        #   Ініціалізація змінних
         self.tableWidget = table_widget
         self.table_name = "internet_store_licenses"
         self.editable = True
@@ -21,6 +22,7 @@ class DatabaseSQLite:
         self.connect(filename)
 
     def connect(self, filename: str):
+        """З'єднання з базою SQLite"""
         try:
             self.db = sqlite3.connect(filename)
             self.cursor = self.db.cursor()
@@ -29,6 +31,7 @@ class DatabaseSQLite:
             self.logger.error_message_box(f"Error connecting to SQLite database! {error}")
 
     def init_table_widget_axis(self):
+        """Ініціалізація назв комірок у таблиці"""
         try:
             self.cursor.execute(f"SELECT * FROM {self.table_name} LIMIT 0")
             columns = self.cursor.description
@@ -46,6 +49,7 @@ class DatabaseSQLite:
             self.logger.error_message_box(f"SQLite error connecting table! {error}")
 
     def init_table_widget_fields(self):
+        """Заповнення таблиці значеннями"""
         for i, field in enumerate(self.fields):
             for j, value in enumerate(field):
                 table_widget_item = QTableWidgetItem(str(value))
@@ -54,6 +58,7 @@ class DatabaseSQLite:
                 self.tableWidget.setItem(i, j, table_widget_item)
 
     def update_table_widget(self):
+        """Оновити PyQt віджет для зображення бази даних"""
         try:
             self.editable = False
             self.init_table_widget_axis()
@@ -64,6 +69,7 @@ class DatabaseSQLite:
 
     @staticmethod
     def query_field_names(columns: [str]):
+        """Повертає назви змінних в SQLite форматі"""
         sql_query = ""
         for i, column_name in enumerate(columns):
             comma = ", " if not i == 0 else ""
@@ -71,6 +77,7 @@ class DatabaseSQLite:
         return sql_query
 
     def query_field_values(self, field_values):
+        """Повертає значення змінних в SQLite форматі"""
         sql_query = ""
         for i, export_index in enumerate(self.export_indexes):
             comma = ", " if not i == 0 else ""
@@ -79,6 +86,7 @@ class DatabaseSQLite:
 
     @staticmethod
     def str_to_sqlite_typo(var):
+        """Конвертація значення змінної у SQLite вигляд"""
         if var == "" or var is None or str(var).lower() == "null":
             return "NULL"
         if is_number(var):
@@ -86,6 +94,7 @@ class DatabaseSQLite:
         return f'"{var}"'
 
     def migrate_from_postgresql(self, db_postgresql: DatabasePostgreSQL, export_fields: [str]):
+        """Міграція з PostgreSQL"""
         def field_statement(value, statement):
             return f", {value}" if statement else ""
 

@@ -1,4 +1,5 @@
 def is_number(n):
+    """Перевірка на числове значення"""
     try:
         float(n)
     except ValueError:
@@ -6,6 +7,7 @@ def is_number(n):
     return True
 
 def sql_query_field_names(column_names, id_index, with_id_field=True):
+    """Назви полів у SQL формат"""
     sql_query = ""
     for i, column_name in enumerate(column_names):
         if not with_id_field and i == id_index:
@@ -16,6 +18,7 @@ def sql_query_field_names(column_names, id_index, with_id_field=True):
     return sql_query
 
 def sql_query_values(field_values, id_index, column_types, str_to_sql_typo, with_id_field=True):
+    """Значення полів у SQL формат"""
     sql_query = ""
     for i, field_value in enumerate(field_values):
         if not with_id_field and i == id_index:

@@ -9,6 +9,7 @@ from PyQt5.QtCore import Qt
 
 class DatabasePostgreSQL:
     def __init__(self, host, user, password, database, logger: Logger, table_widget: QTableWidget):
+        #   Ініціалізація змінних
         self.tableWidget = table_widget
         self.table_name = "internet_store_licenses"
         self.editable = True
@@ -18,9 +19,11 @@ class DatabasePostgreSQL:
         self.db: None | psycopg2.connection = None
         self.connect(host, user, password, database)
         self.cursor = self.db.cursor()
+        #   Обробка зміни комірки в таблиці
         self.tableWidget.itemChanged.connect(self.update_field)
 
     def connect(self, host, user, password, database):
+        """З'єднання з базою PostgreSQL"""
         try:
             self.db = psycopg2.connect(
                 host=host,
@@ -33,6 +36,7 @@ class DatabasePostgreSQL:
             self.logger.error_message_box(f"Error trying to connect to PostgreSQL! {error}", should_abort=True)
 
     def init_table_widget_axis(self):
+        """Ініціалізація назв комірок у таблиці"""
         try:
             self.cursor.execute(f"SELECT * FROM {self.table_name} LIMIT 0")
             self.column_names = [i[0] for i in self.cursor.description]
@@ -50,6 +54,7 @@ class DatabasePostgreSQL:
             self.db.rollback()
 
     def init_table_widget_fields(self):
+        """Заповнення таблиці значеннями"""
         for i, field in enumerate(self.fields):
             for j, value in enumerate(field):
                 table_widget_item = QTableWidgetItem(str(value))
@@ -57,6 +62,7 @@ class DatabasePostgreSQL:
                 self.tableWidget.setItem(i, j, table_widget_item)
 
     def update_table_widget(self):
+        """Оновити PyQt віджет для зображення бази даних"""
         try:
             self.editable = False
             self.init_table_widget_axis()
@@ -68,6 +74,7 @@ class DatabasePostgreSQL:
 
     @staticmethod
     def str_to_postgresql_typo(var, field_type):
+        """Конвертація значення змінної у PostgreSQL вигляд"""
         if var == "" or var is None or str(var).lower() == "null":
             return "NULL"
         if field_type == b'tinyint(1)':
@@ -77,6 +84,7 @@ class DatabasePostgreSQL:
         return f"'{var}'"
 
     def postgresql_query_values(self, field_values, column_types, with_id_field=True):
+        """Повертає значення змінних в PostgreSQL форматі"""
         return sql_query_values(
             field_values=field_values,
             id_index=self.id_index,
@@ -86,13 +94,14 @@ class DatabasePostgreSQL:
         )
 
     def migrate_from_mysql(self, mysql_db: DatabaseMySQL):
+        """Міграція з MySQL"""
         def wrap_foo():
             self.id_index = mysql_db.id_index
             self.column_types = mysql_db.column_types
             try:
-                #   Drop table before exporting
+                #   Очистити таблицю перед міграцією
                 self.cursor.execute(f"DROP TABLE IF EXISTS {self.table_name}")
-                #   Create empty table
+                #   Створення порожньої таблиці
                 self.cursor.execute(f"""
                     CREATE TABLE IF NOT EXISTS {self.table_name} (
                             id SERIAL PRIMARY KEY,
@@ -127,6 +136,7 @@ class DatabasePostgreSQL:
         return wrap_foo
 
     def update_field(self, item: QTableWidgetItem):
+        """Оновлення значення в БД"""
         if not self.editable:
             return
         row, column = item.row(), item.column()
@@ -143,6 +153,7 @@ class DatabasePostgreSQL:
         self.update_table_widget()
 
     def export_to_sqlite(self, export_fields_lineedit: QLineEdit, db_sqlite):
+        """Експорт в SQLite"""
         def wrap_foo():
             export_fields_text = export_fields_lineedit.text()
             export_fields = re.split(",\\s*|\\s+", export_fields_text)

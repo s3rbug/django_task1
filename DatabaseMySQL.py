@@ -10,6 +10,7 @@ from Logger import Logger
 
 class DatabaseMySQL:
     def __init__(self, host, user, password, database, table_widget: QTableWidget, logger: Logger):
+        #   Ініціалізація змінних
         self.fields = self.column_names = self.column_types = []
         self.id_index = self.table_rows = self.table_columns = 0
         self.editable = True
@@ -21,13 +22,16 @@ class DatabaseMySQL:
         self.cursor = self.db.cursor()
         self.create_sql_table()
         self.update_table_widget()
+        #   Обробка зміни комірки в таблиці
         self.tableWidget.itemChanged.connect(self.update_field)
 
     def __del__(self):
+        """Закриття з'єднання"""
         self.cursor.close()
         self.db.close()
 
     def connect(self, host, user, password, database):
+        """З'єднання з базою MySQL"""
         try:
             self.db = connector.connect(
                 host=host,
@@ -40,6 +44,7 @@ class DatabaseMySQL:
             self.logger.error_message_box("MySQL connection error! " + error.msg, should_abort=True)
 
     def create_sql_table(self):
+        """Створення таблиці, якщо вона ще не створена"""
         try:
             self.cursor.execute(f"""
                 CREATE TABLE IF NOT EXISTS {self.table_name} (
@@ -58,6 +63,7 @@ class DatabaseMySQL:
             self.logger.error_message_box("MySQL error creating table! " + error.msg, should_abort=True)
 
     def init_table_widget_axis(self):
+        """Ініціалізація назв комірок у таблиці"""
         try:
             self.cursor.execute(f"SHOW COLUMNS FROM {self.table_name}")
             columns = self.cursor.fetchall()
@@ -80,6 +86,7 @@ class DatabaseMySQL:
             self.logger.error_message_box("MySQL error connecting table! " + error.msg)
 
     def init_table_widget_fields(self):
+        """Заповнення таблиці значеннями"""
         for i, field in enumerate(self.fields):
             for j, value in enumerate(field):
                 table_widget_item = QTableWidgetItem(str(value))
@@ -90,6 +97,7 @@ class DatabaseMySQL:
             self.tableWidget.setCellWidget(i, len(field), delete_button)
 
     def init_table_widget_create_item(self):
+        """Створення додаткових кнопок в таблиці"""
         add_button = QPushButton("Create item")
         add_button.clicked.connect(self.create_field)
         self.tableWidget.setCellWidget(self.table_rows, self.table_columns, add_button)
@@ -102,6 +110,7 @@ class DatabaseMySQL:
             self.tableWidget.setItem(self.table_rows, i, table_widget_item)
 
     def update_table_widget(self):
+        """Оновити PyQt віджет для зображення бази даних"""
         try:
             self.editable = False
             self.init_table_widget_axis()
@@ -112,6 +121,7 @@ class DatabaseMySQL:
             self.logger.error_message_box("MySQL error trying to update table! " + error.msg)
 
     def delete_field(self, field_id):
+        """Видалення значення по id"""
         def wrap_foo():
             sql_query = f"DELETE FROM {self.table_name} WHERE id={field_id}"
             self.cursor.execute(sql_query)
@@ -127,6 +137,7 @@ class DatabaseMySQL:
 
     @staticmethod
     def str_to_mysql_typo(var, _):
+        """Конвертація значення змінної у MySQL вигляд"""
         if var == "" or var is None or str(var).lower() == "null":
             return "NULL"
         if is_number(var):
@@ -134,6 +145,7 @@ class DatabaseMySQL:
         return f'"{var}"'
 
     def mysql_query_values(self, field_values, with_id_field=True):
+        """Повертає значення змінних в MySQL форматі"""
         return sql_query_values(
             field_values=field_values,
             id_index=self.id_index,
@@ -143,6 +155,7 @@ class DatabaseMySQL:
         )
 
     def sql_query_field_names(self, with_id_field=False):
+        """Повертає назви змінних в MySQL форматі"""
         sql_query = ""
         for i, column_name in enumerate(self.column_names):
             if not with_id_field and i == self.id_index:
@@ -153,6 +166,7 @@ class DatabaseMySQL:
         return sql_query
 
     def create_field(self):
+        """Створення нового елемента в БД"""
         new_field_widgets = [self.tableWidget.item(self.table_rows, i) for i in range(self.table_columns)]
         new_field_items = [field_widget.text() if field_widget else "" for field_widget in new_field_widgets]
         with_id_field = False if new_field_items[self.id_index] == "" else True
@@ -178,10 +192,11 @@ class DatabaseMySQL:
             self.logger.error_message_box("MySQL error trying to add table item! " + error.msg)
 
     def update_field(self, item: QTableWidgetItem):
+        """Оновлення значення в БД"""
         if not self.editable:
             return
         row, column = item.row(), item.column()
-        #   Check if SQL field cell
+        #   Перевірка, чи змінена комірка частина БД
         if row == self.table_rows or column == self.table_columns:
             return
         field = self.column_names[column]

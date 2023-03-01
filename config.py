@@ -1,4 +1,4 @@
-#   Should be git ignored
+#   Файл конфігурації
 
 MYSQL = {
     "host": "localhost",
