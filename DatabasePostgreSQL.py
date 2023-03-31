@@ -17,6 +17,7 @@ class DatabasePostgreSQL:
         self.id_index = self.table_columns = self.table_rows = 0
         self.logger = logger
         self.db: None | psycopg2.connection = None
+        #   З'єднання з базою даних
         self.connect(host, user, password, database)
         self.cursor = self.db.cursor()
         #   Обробка зміни комірки в таблиці

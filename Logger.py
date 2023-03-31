@@ -9,9 +9,11 @@ class Logger:
         self.label = label
 
     def log(self, message, tag="INFO"):
+        """Надрукувати текст в лог з відповідним тегом"""
         self.label.setText(f"{self.label.text()}[{tag}] - {message}<br/>")
 
     def error_message_box(self, text, window_title="Error", should_abort=False):
+        """Надрукувати текст в лог та зобразити Message Box про помилку"""
         message_box = QMessageBox()
         message_box.setText(text)
         message_box.setIcon(QMessageBox.Critical)

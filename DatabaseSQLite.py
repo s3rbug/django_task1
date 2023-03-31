@@ -19,6 +19,7 @@ class DatabaseSQLite:
         self.logger = logger
         self.db: None | sqlite3.Connection = None
         self.cursor = None
+        #   З'єднання з базою даних
         self.connect(filename)
 
     def connect(self, filename: str):
@@ -36,6 +37,7 @@ class DatabaseSQLite:
             self.cursor.execute(f"SELECT * FROM {self.table_name} LIMIT 0")
             columns = self.cursor.description
             self.column_names = [i[0] for i in columns]
+            self.tableWidget.setColumnCount(len(self.column_names))
             self.id_index = self.column_names.index("id")
             self.tableWidget.setHorizontalHeaderLabels(self.column_names)
             self.table_columns = len(self.column_names)
@@ -96,12 +98,13 @@ class DatabaseSQLite:
     def migrate_from_postgresql(self, db_postgresql: DatabasePostgreSQL, export_fields: [str]):
         """Міграція з PostgreSQL"""
         def field_statement(value, statement):
+            """Додаємо відповідне поле, якщо справджується задана умова"""
             return f", {value}" if statement else ""
 
         try:
-            #   Drop table before exporting
+            #   Очищення таблиці перед міграцією
             self.cursor.execute(f"DROP TABLE IF EXISTS {self.table_name}")
-            #   Create empty table
+            #   Створення порожньої таблиці з необхідними полями
             sql_query_create_table = f"""
             CREATE TABLE IF NOT EXISTS {self.table_name} (
                         id INTEGER PRIMARY KEY AUTOINCREMENT
@@ -124,6 +127,7 @@ class DatabaseSQLite:
             self.cursor.execute(sql_query_create_table)
             self.export_indexes = [db_postgresql.column_names.index(export_field)
                                    for export_field in export_fields]
+            #   Додаємо дані з PostgreSQL
             for field in db_postgresql.fields:
                 sql_query = f"""
                         INSERT INTO {self.table_name} 

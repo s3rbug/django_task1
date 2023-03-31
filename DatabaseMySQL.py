@@ -18,6 +18,7 @@ class DatabaseMySQL:
         self.table_name = "internet_store_licenses"
         self.tableWidget = table_widget
         self.logger = logger
+        #   З'єднання з базою даних
         self.connect(host=host, user=user, password=password, database=database)
         self.cursor = self.db.cursor()
         self.create_sql_table()
